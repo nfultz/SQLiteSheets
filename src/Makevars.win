@@ -1,17 +1,17 @@
 TARGET = $(subst 64,x86_64,$(subst 32,i686,$(WIN)))-pc-windows-gnu
-LIBDIR = myrustlib/target/$(TARGET)/release
-STATLIB = $(LIBDIR)/libmyrustlib.a
-PKG_LIBS = -L$(LIBDIR) -lmyrustlib -lws2_32 -ladvapi32 -lgdi32 -lbcrypt -lcrypt32 -luserenv
+LIBDIR = xlite/target/$(TARGET)/release
+STATLIB = $(LIBDIR)/libxlite.so
+PKG_LIBS = -L$(LIBDIR) -lxlite -lws2_32 -ladvapi32 -lgdi32 -lbcrypt -lcrypt32 -luserenv
 
 all: clean rustup
 
 $(SHLIB): $(STATLIB)
 
 $(STATLIB):
-	PATH="$(USERPROFILE)\.cargo\bin:$(PATH)" cargo build --target=$(TARGET) --release --manifest-path=myrustlib/Cargo.toml
+	PATH="$(USERPROFILE)\.cargo\bin:$(PATH)" cargo build --target=$(TARGET) --release --manifest-path=xlite/Cargo.toml
 
 clean:
-	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS) myrustlib/target
+	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS) xlite/target
 
 rustup:
 	rustup target add $(TARGET) || true

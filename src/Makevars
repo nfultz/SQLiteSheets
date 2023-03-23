@@ -1,22 +1,28 @@
-LIBDIR = myrustlib/target/release
-STATLIB = $(LIBDIR)/libmyrustlib.a
+LIBDIR = xlite/target/release
+STATLIB = $(LIBDIR)/libxlite.so
 PKG_CFLAGS = -pthread
-PKG_LIBS = -L$(LIBDIR) -lmyrustlib -lresolv -pthread
+PKG_LIBS = -L$(LIBDIR) -lxlite -lresolv -pthread
 
 #all: clean
 
-$(SHLIB): $(STATLIB)
+$(SHLIB): $(notdir $(STATLIB))
+
 
 # CRAN policy forbids using $HOME so we build in the current working dir.
 # This makes things really slow because we have to reinstall all dependencies
 # for each build. Comment this out for non-CRAN releases.
-CARGOTMP=$(PWD)/.cargo
-export CARGO_HOME=$(CARGOTMP)
+#CARGOTMP=$(PWD)/.cargo
+#export CARGO_HOME=$(CARGOTMP)
+
+$(notdir $(STATLIB)): $(STATLIB)
+	cp $< .
+
 
 $(STATLIB):
-	PATH="${PATH}:${HOME}/.cargo/bin" cargo build --release --manifest-path=myrustlib/Cargo.toml
+	PATH="${PATH}:${HOME}/.cargo/bin" cargo build --release --manifest-path=xlite/Cargo.toml
 	rm -Rf $(CARGOTMP) || true #CRAN wants us to remove "detritus"
 	rm -Rf $(LIBDIR)/build || true
 
+
 clean:
-	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS) myrustlib/target
+	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS) xlite/target

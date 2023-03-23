@@ -1,34 +1,34 @@
-#' Hello Rust!
-#'
-#' Minimal examples of calling rust functions in R via C.
-#'
-#' These functions call out to rust functions defined in the `myrustlib` cargo
-#' crate which is embedded in this package. They return values generated in Rust,
-#' such as a UTF-8 string or random number. In addition, `runthreads` is an
-#' example of a multi-threaded rust function.
-#'
-#' @export
-#' @rdname hellorust
-#' @examples hello()
-#' @return a value generated in Rust (a string, random number, and NULL respectively).
-#' @useDynLib hellorust hello_wrapper
-hello <- function() {
-  .Call(hello_wrapper)
+setClass("SQLiteSheetsDriver", contains = "SQLiteDriver")
+
+setClass("SQLiteSheetsConnection", contains = "SQLiteConnection")
+
+
+SQLiteSheets <- function() {
+  new("SQLiteSheetsDriver")
 }
 
-#' @export
-#' @rdname hellorust
-#' @examples random()
-#' @useDynLib hellorust random_wrapper
-random <- function(){
-  .Call(random_wrapper)
-}
+setMethod("dbConnect", "SQLiteSheetsDriver", function(drv, ...) {
+  # ...
+  con <- callNextMethod()
 
-#' @export
-#' @rdname hellorust
-#' @examples runthreads()
-#' @useDynLib hellorust threads_wapper
-runthreads <- function(){
-  .Call(threads_wapper)
-  invisible()
-}
+  file <- system.file("libs", "libxlite.so", package = 'SQLiteSheets') |>   enc2utf8() # path to so
+
+  entry_point <- "sqlite3_xlite_init"
+
+  .Call("_RSQLite_extension_load", con@ptr, file, entry_point, PACKAGE = "RSQLite")
+
+  as(con, "SQLiteSheetsConnection")
+})
+
+
+setMethod("dbConnect", "SQLiteSheetsConnection", function(drv, ...) {
+  if (drv@dbname %in% c("", ":memory:", "file::memory:")) {
+    stop("Can't clone a temporary database", call. = FALSE)
+  }
+
+  dbConnect(SQLiteSheetsDriver(), drv@dbname,
+            vfs = drv@vfs, flags = drv@flags,
+            loadable.extensions = drv@loadable.extensions
+  )
+
+})
